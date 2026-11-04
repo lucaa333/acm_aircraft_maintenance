@@ -1,0 +1,6 @@
+matplotlib==3.11.2
+numpy==2.5.4
+pandas==3.1.0
+pytest==9.2.0
+# The project itself, editable, so tests, scripts and `python -m desim.cli` import it from src/.
+-e .

@@ -1,0 +1,11 @@
+High-precision target-rho DES sensitivity analysis
+========================================================================
+Methodology: arrival rates solved from true service-time means, PM:CM ratio kept
+Base scenario: config/scenarios/stable.json
+Warm-up period: 100.0 h
+Simulation horizon: 50000.0 h
+Independent replications: 30
+Base seed: 42
+Seed strategy: base seed + replication index
+Utilization definition: rho_hangar = (lambda_pm * E[S_PM] + lambda_cm * E[S_CM]) / hangar_slots
+Baseline PM:CM ratio: 2.6666667

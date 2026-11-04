@@ -1,0 +1,9 @@
+model_name,scenario_name,waiting_time_total,queue_length_total,waiting_time_hp,waiting_time_lp,queue_length_hp,queue_length_lp,mttr_cm,hangar_utilization,mechanics_utilization,escalation_rate,waiting_time_pm_regular,waiting_time_pm_escalated,queue_length_pm_regular,queue_length_pm_escalated,cycle_time_pm_regular,cycle_time_pm_escalated,tasks_cm,tasks_pm_regular,tasks_pm_escalated,escalations_total,preemption_rate,preemptions_total,preemptions_by_cm,preemptions_by_escalated_pm,preemptions_after_deadline,preemption_cascades,setup_hours,blocked_bay_share,blocked_cm_behind_cm_share,approximation
+M/M/1 Single Priority (pooled exp.),stable_aircraft_maintenance,4.8256,0.5308,,,,,,0.51,,,,,,,,,,,,,,,,,,,,,,
+M/M/2 Single Priority (pooled exp.),stable_aircraft_maintenance,0.3224,0.0355,,,,,,0.255,,,,,,,,,,,,,,,,,,,,,,
+M/G/1 Single Priority,stable_aircraft_maintenance,2.5599,0.2816,,,,,,0.51,,,,,,,,,,,,,,,,,,,,,,pollaczek-khinchine
+M/G/2 Single Priority,stable_aircraft_maintenance,0.1711,0.0188,,,,,,0.255,,,,,,,,,,,,,,,,,,,,,,whitt-eq70
+M/M/1 Multi Priority Preemptive-Resume (class-specific exp.),stable_aircraft_maintenance,4.581,0.5039,0.4532,6.1289,0.0136,0.4903,,0.51,,,,,,,,,,,,,,,,,,,,,,preemptive-resume-mg1
+M/M/2 Multi Priority Preemptive-Resume (class-specific exp.),stable_aircraft_maintenance,0.3093,0.034,0.0111,0.4211,0.0003,0.0337,,0.255,,,,,,,,,,,,,,,,,,,,,,exact-qbd-preemptive
+M/G/1 Multi Priority Preemptive-Resume,stable_aircraft_maintenance,2.607,0.2868,0.2409,3.4943,0.0072,0.2795,,0.51,,,,,,,,,,,,,,,,,,,,,,preemptive-resume-mg1
+M/G/2 Multi Priority Preemptive-Resume,stable_aircraft_maintenance,0.1809,0.0199,0.0059,0.2466,0.0002,0.0197,,0.255,,,,,,,,,,,,,,,,,,,,,,bondi-buzen-approximation

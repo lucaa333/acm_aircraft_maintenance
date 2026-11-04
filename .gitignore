@@ -1,0 +1,44 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.matplotlib/
+.cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Secrets / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*.json
+secrets*.json
+*.secret
+.netrc
+.pypirc
+
+# Virtual environments
+venv/
+env/
+.python-version
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+.ipynb_checkpoints/
