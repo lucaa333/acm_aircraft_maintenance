@@ -22,14 +22,24 @@ OUTPUT_PNG = RESULTS_DIR / "analytical_vs_des/decomposition_ratio.png"
 # None is the baseline with its own rates and horizon (rho = 0.255); the others match the sensitivity.
 LOADS = [(None, 5000.0), (0.25, 50000.0), (0.50, 50000.0), (0.75, 50000.0), (0.85, 50000.0), (0.90, 50000.0)]
 
-# (identifier, label, build_variant options). The identifier is the series name of the figure.
+# (identifier, label, build_variant options). The variants form a chain: V1 meets the assumptions of
+# the analytical models (no coupling, no escalation, no set-up time after a preemption), and each
+# next variant adds one mechanism of the paper configuration: V2 the set-up time, V3 the coupling of
+# bays and engineers (15 instead of 16 engineers), V4 the escalation. The run order does not affect
+# the numbers: seeds depend only on the replication index (common random numbers).
 DES_VARIANTS = [
-    ("V1", "no escalation, 15 engineers", {"escalation": False}),
+    ("V1", "no escalation, 16 engineers, no set-up time", {"escalation": False, "mechanics": 16, "setup": 0.0}),
     ("V2", "no escalation, 16 engineers", {"escalation": False, "mechanics": 16}),
-    # Closest to the analytical assumptions: no coupling, no escalation and no set-up time after a preemption.
-    ("V3", "no escalation, 16 engineers, no set-up time", {"escalation": False, "mechanics": 16, "setup": 0.0}),
+    ("V3", "no escalation, 15 engineers", {"escalation": False}),
     ("V4", "paper configuration", {}),
 ]
+# Legend of the figure: the mechanism each variant adds, so the figure reads without the identifiers.
+LEGEND_LABELS = {
+    "V1": "analytical assumptions",
+    "V2": "+ set-up time",
+    "V3": "+ coupling",
+    "V4": "+ escalation (paper)",
+}
 
 # (label, DES field, analytical priority field, whether the FCFS model has a value, field of the
 # CM-only M/G/1). The CM-only reference is a single bay serving the CM stream alone, so it speaks
@@ -55,9 +65,11 @@ FIGURE_RHOS = [rho for rho, _ in LOADS if rho is not None]
 FIGURE_CAPTION = (
     "Ratio of the DES mean waiting time to the M/G/2 preemptive-resume approximation over the load, "
     "per DES variant. 1.0 is agreement, above 1.0 the DES waits longer than the analytical model. "
-    "V1 no escalation and 15 engineers, V2 no escalation and 16 engineers, V3 additionally without "
-    "set-up time, V4 the paper configuration. The baseline load is left out because its rates are "
-    "not on the target-rho grid. 30 replications of 50,000 h per point."
+    "Each variant adds one mechanism to the previous one: analytical assumptions (16 engineers, no "
+    "escalation, no set-up time), + set-up time, + coupling (15 engineers), + escalation (paper "
+    "configuration). Up to rho = 0.50 the last two coincide, since hardly any PM task escalates. "
+    "The baseline load is left out because its rates are not on the target-rho grid. 30 replications "
+    "of 50,000 h per point, common random numbers."
 )
 
 
@@ -91,7 +103,7 @@ def plot_decomposition(table: pd.DataFrame) -> None:
             marker=marker,
             markersize=5,
             linewidth=1.8,
-            label=identifier,
+            label=LEGEND_LABELS[identifier],
         )
     ax.set_xlabel(r"Target utilization $\rho$", fontsize=FIGURE_FONT["label"])
     ax.set_ylabel("DES / M/G/2 preemptive [-]", fontsize=FIGURE_FONT["label"])
@@ -101,7 +113,7 @@ def plot_decomposition(table: pd.DataFrame) -> None:
     ax.tick_params(labelsize=FIGURE_FONT["tick"])
     ax.grid(axis="y", color="#e4e3dd", linewidth=0.8)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.legend(loc="upper left", frameon=False, fontsize=FIGURE_FONT["legend"], ncols=2)
+    ax.legend(loc="upper left", frameon=False, fontsize=FIGURE_FONT["legend"])
     fig.savefig(OUTPUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)
 

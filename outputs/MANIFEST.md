@@ -36,7 +36,7 @@ Common settings: paper configuration from `config/scenarios/stable.json` (preemp
 | --- | --- | --- | --- |
 | M/G/2 FCFS and M/G/2 preemptive against four DES variants, per load (§5.5, §5.7) | `analytical_vs_des/analytical_vs_des.csv` | `scripts/analysis/run_analytical_vs_des.py` | baseline 30 x 5000 h, rho 0.25 to 0.90 30 x 50000 h |
 | M/G/1 fed by the CM stream alone, columns `rho_mg1_cm_only`, `mg1_cm_only`, `ratio_des_to_mg1_cm_only`; Pollaczek-Khinchine with lambda_CM and the CM service distribution (§3.1), filled for the `Wq CM/HP` and `Lq CM/HP` rows only | same | same | analytical, one value per load |
-| Variant identifiers V1 to V4 of the DES variants, column `des_variant_id` | same | same | same |
+| Variant identifiers V1 to V4 of the DES variants, column `des_variant_id`; each adds one mechanism: V1 analytical assumptions (16 engineers, no escalation, no set-up time), V2 + set-up time, V3 + coupling (15 engineers), V4 + escalation (paper configuration) | same | same | same |
 | Figure: ratio DES to M/G/2 preemptive over the load, one line per DES variant, reference line at 1 | `analytical_vs_des/decomposition_ratio.png` | same | rho 0.25 to 0.90; the baseline load is left out, its rates are not on the target-rho grid |
 
 ## Load sensitivity
@@ -90,5 +90,5 @@ they are diagnostics and appendix material.
 | Figure | Caption |
 | --- | --- |
 | `target_rho_sensitivity/waiting_and_escalation_by_target_rho.png` | Left: mean waiting time over the load, split into all tasks, the original CM tasks and all PM tasks. Right: share of PM tasks that escalate. Bands: 95 % Student-t intervals over 30 replications of 50,000 h. |
-| `threshold_sweep/threshold_sweep.png` | Mean waiting time Wq over the escalation threshold X, one panel per load, each with its own scale. Dashed line: X = 14 h of the paper. X = none is strict priority. Bands: 95 % Student-t intervals over 30 replications. |
-| `analytical_vs_des/decomposition_ratio.png` | Ratio of the DES mean waiting time to the M/G/2 preemptive-resume approximation over the load, per DES variant. 1.0 is agreement, above 1.0 the DES waits longer than the analytical model. V1 no escalation and 15 engineers, V2 no escalation and 16 engineers, V3 additionally without set-up time, V4 the paper configuration. The baseline load is left out because its rates are not on the target-rho grid. 30 replications of 50,000 h per point. |
+| `threshold_sweep/threshold_sweep.png` | Mean waiting time W_q over the escalation threshold X, one panel per load, each with its own scale. Dashed line: X = 14 h of the paper. X = none is strict priority. Bands: 95 % Student-t intervals over 30 replications. |
+| `analytical_vs_des/decomposition_ratio.png` | Ratio of the DES mean waiting time to the M/G/2 preemptive-resume approximation over the load, per DES variant. 1.0 is agreement, above 1.0 the DES waits longer than the analytical model. Each variant adds one mechanism to the previous one: analytical assumptions (16 engineers, no escalation, no set-up time), + set-up time, + coupling (15 engineers), + escalation (paper configuration). Up to rho = 0.50 the last two coincide, since hardly any PM task escalates. The baseline load is left out because its rates are not on the target-rho grid. 30 replications of 50,000 h per point, common random numbers. |

@@ -26,10 +26,13 @@ PLOT_LOADS = ["0.75", "0.85", "0.90"]
 PAPER_THRESHOLD = 14.0
 # Categorical slots 1-3 of the validated palette; the marker shape is the second encoding.
 SERIES = [("Wq", "Total", "#2a78d6", "o"), ("Wq_CM", "CM", "#eb6834", "s"), ("Wq_PM", "PM", "#1baf7a", "^")]
+# Both columns of the ACM template (7.0 in), with the point sizes of the other paper figures.
+FIGURE_SIZE = (7.0, 2.6)
+FIGURE_FONT = {"tick": 7, "label": 8, "legend": 7, "title": 8}
 
 # The image carries no footnote: this text belongs in the caption of the paper, see outputs/MANIFEST.md.
 FIGURE_CAPTION = (
-    "Mean waiting time Wq over the escalation threshold X, one panel per load, each with its own "
+    "Mean waiting time W_q over the escalation threshold X, one panel per load, each with its own "
     "scale. Dashed line: X = 14 h of the paper. X = none is strict priority. Bands: 95 % Student-t "
     "intervals over 30 replications."
 )
@@ -43,21 +46,24 @@ def plot(table: pd.DataFrame) -> None:
     """Wq over X per load, one panel each with its own scale, 95 % band per class."""
     labels = ["none" if x is None else f"{x:g}" for x in THRESHOLDS]
     positions = range(len(labels))
-    fig, axes = plt.subplots(1, len(PLOT_LOADS), figsize=(12, 4), constrained_layout=True)
+    fig, axes = plt.subplots(1, len(PLOT_LOADS), figsize=FIGURE_SIZE, constrained_layout=True)
     for ax, load in zip(axes, PLOT_LOADS, strict=True):
         rows = table[table["load"] == load]
         for column, label, color, marker in SERIES:
             ax.fill_between(positions, rows[f"{column}_ci_lower"], rows[f"{column}_ci_upper"], color=color, alpha=0.15, linewidth=0)
-            ax.plot(positions, rows[column], color=color, marker=marker, markersize=6, linewidth=2, label=label)
+            ax.plot(positions, rows[column], color=color, marker=marker, markersize=4, linewidth=1.5, label=label)
         ax.axvline(THRESHOLDS.index(PAPER_THRESHOLD), color="#8a8984", linestyle="--", linewidth=1)
-        ax.set_title(r"$\rho$ = " + load, color="#1a1a19")
+        ax.set_title(r"$\rho$ = " + load, color="#1a1a19", fontsize=FIGURE_FONT["title"])
         ax.set_xticks(list(positions), labels)
-        ax.set_xlabel("Escalation threshold X [h]")
+        ax.set_xlabel("Escalation threshold $X$ [h]", fontsize=FIGURE_FONT["label"])
+        ax.tick_params(labelsize=FIGURE_FONT["tick"])
         ax.set_ylim(bottom=0)
         ax.grid(axis="y", color="#e4e3dd", linewidth=0.8)
         ax.spines[["top", "right"]].set_visible(False)
-    axes[0].set_ylabel("Mean waiting time Wq [h]")
-    axes[0].legend(loc="upper left", frameon=False)
+    axes[0].set_ylabel("Mean waiting time $W_q$ [h]", fontsize=FIGURE_FONT["label"])
+    # One legend above the panels: inside the first panel it would cover the PM curve.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="outside upper center", ncols=len(SERIES), frameon=False, fontsize=FIGURE_FONT["legend"])
     fig.savefig(OUTPUT_PNG, dpi=300, bbox_inches="tight")
     plt.close(fig)
 

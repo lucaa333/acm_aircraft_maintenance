@@ -15,7 +15,7 @@ It creates a local `.venv` if needed, installs the pinned dependencies and the p
 
 ## Requirements
 
-- Python `>= 3.12`, tested with `3.14`
+- Python `>= 3.12`; the outputs in `outputs/results/` were produced with Python 3.12.11 and the package versions pinned in `requirements.txt`
 - `bash`
 - Python packages pinned in `requirements.txt`; its last line installs this project with `pip install -e .`
 

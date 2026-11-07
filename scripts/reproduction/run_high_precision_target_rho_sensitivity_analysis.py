@@ -255,7 +255,7 @@ def plot_main_figure(confidence_intervals: pd.DataFrame, target: Path) -> None:
         rows = band_series(confidence_intervals, metric)
         left.fill_between(rows["target_rho"], rows["ci_lower"], rows["ci_upper"], color=color, alpha=0.25, linewidth=0)
         left.plot(rows["target_rho"], rows["mean"], color=color, marker=marker, markersize=5, linewidth=1.8, label=label)
-    left.set_ylabel("Mean waiting time Wq [h]", fontsize=MAIN_FIGURE_FONT["label"])
+    left.set_ylabel("Mean waiting time $W_q$ [h]", fontsize=MAIN_FIGURE_FONT["label"])
     left.legend(loc="upper left", frameon=False, fontsize=MAIN_FIGURE_FONT["legend"])
 
     metric, label, color, marker = ESCALATION_SERIES
