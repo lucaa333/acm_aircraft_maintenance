@@ -4,7 +4,12 @@ from __future__ import annotations
 import pandas as pd
 
 from desim.experiments.pipeline_context import RESULTS_DIR, load_base_scenario
-from desim.experiments.replications import build_variant, field_values, interval_columns
+from desim.experiments.replications import (
+    build_variant,
+    field_values,
+    interval_columns,
+    paired_difference_columns,
+)
 from desim.models.simulation.des_model import DiscreteEventSimulationModel
 
 OUTPUT_CSV = RESULTS_DIR / "escalation_variants/escalation_variants.csv"
@@ -19,14 +24,25 @@ VARIANTS = [
     ("16 engineers, configured order", {"mechanics": 16}),
 ]
 
+# The rule of the paper: escalated PM at the end of the HP queue, 15 engineers. Every other
+# placement is differenced against it, paired per replication.
+PAPER_VARIANT = "escalated PM joins HP queue end"
+
 
 def main() -> None:
     base = load_base_scenario()
     model = DiscreteEventSimulationModel()
     rows = []
     for rho in TARGET_RHOS:
-        for label, options in VARIANTS:
-            runs = model.run_replications(build_variant(base, rho=rho, run_length=RUN_LENGTH, **options))
+        # All placements of one load first, so each row can be differenced against the paper rule.
+        # Seeds are the base seed plus the replication index, so the run order changes no number.
+        runs_by_variant = {
+            label: model.run_replications(build_variant(base, rho=rho, run_length=RUN_LENGTH, **options))
+            for label, options in VARIANTS
+        }
+        paper_waits = field_values(runs_by_variant[PAPER_VARIANT], "waiting_time_total")
+        for label, _ in VARIANTS:
+            runs = runs_by_variant[label]
             rows.append(
                 {
                     "target_rho": rho,
@@ -42,12 +58,28 @@ def main() -> None:
                     **interval_columns(runs, "preemption_rate", "PreemptionRate"),
                     **interval_columns(runs, "preemption_cascades", "PreemptionCascades"),
                     "Escalations_Sum": int(sum(field_values(runs, "escalations_total"))),
+                    **paired_difference_columns(
+                        field_values(runs, "waiting_time_total"), paper_waits, "paired_difference_Wq_vs_paper_rule"
+                    ),
                 }
             )
     table = pd.DataFrame(rows)
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(OUTPUT_CSV, index=False)
     print(table[["target_rho", "variant", "Wq", "Wq_CM", "Wq_PM", "MTTR_CM", "EscalationRate"]].round(4).to_string(index=False))
+    print()
+    print(f"Paired differences of Wq against '{PAPER_VARIANT}', 95 % intervals over the same seeds")
+    print(
+        table[
+            [
+                "target_rho",
+                "variant",
+                "paired_difference_Wq_vs_paper_rule",
+                "paired_difference_Wq_vs_paper_rule_ci_lower",
+                "paired_difference_Wq_vs_paper_rule_ci_upper",
+            ]
+        ].round(4).to_string(index=False)
+    )
     print(f"\nCSV export: {OUTPUT_CSV}")
 
 

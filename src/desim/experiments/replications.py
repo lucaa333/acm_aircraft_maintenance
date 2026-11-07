@@ -52,9 +52,31 @@ def field_values(results: list[ModelResult], field: str) -> list[float]:
     return [getattr(result, field) for result in results if getattr(result, field) is not None]
 
 
-def interval_columns(results: list[ModelResult], field: str, label: str) -> dict[str, float]:
-    mean, lower, upper = confidence_interval(field_values(results, field))
+def estimate_columns(values: list[float] | np.ndarray, label: str) -> dict[str, float]:
+    """Mean and 95 % interval of an already derived per-replication series."""
+    mean, lower, upper = confidence_interval(values)
     return {label: mean, f"{label}_ci_lower": lower, f"{label}_ci_upper": upper}
+
+
+def interval_columns(results: list[ModelResult], field: str, label: str) -> dict[str, float]:
+    return estimate_columns(field_values(results, field), label)
+
+
+def paired_difference_columns(
+    values: list[float], reference: list[float] | None, label: str
+) -> dict[str, float | None]:
+    """Mean of ``values - reference`` per replication and its 95 % interval.
+
+    Common random numbers make the pairing valid: both arms ran on the same seeds, so differencing
+    per replication removes the shared arrival noise and leaves a much tighter interval than two
+    independent means would give. ``reference=None`` writes empty columns, which keeps the row
+    shape identical for an arm that has no partner.
+    """
+    if reference is None:
+        return {label: None, f"{label}_ci_lower": None, f"{label}_ci_upper": None}
+    return estimate_columns(
+        [value - ref for value, ref in zip(values, reference, strict=True)], label
+    )
 
 
 def mser5_truncation(series: np.ndarray) -> int:

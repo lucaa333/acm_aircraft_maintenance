@@ -30,6 +30,8 @@ RUN_CONFIG_JSON = OUTPUT_DIR / "run_configuration.json"
 RUN_METADATA_TXT = OUTPUT_DIR / "run_metadata.txt"
 
 PLOTS = {
+    # The main figure of the paper: two panels, no title and no footnote inside the image.
+    "waiting_and_escalation": OUTPUT_DIR / "waiting_and_escalation_by_target_rho.png",
     "waiting_time": OUTPUT_DIR / "waiting_time_by_target_rho.png",
     "queue_length": OUTPUT_DIR / "queue_length_by_target_rho.png",
     "escalation_rate": OUTPUT_DIR / "escalation_rate_by_target_rho.png",
@@ -43,6 +45,26 @@ HIGH_PRECISION_WARMUP = 100.0
 HIGH_PRECISION_REPLICATIONS = 30
 
 TARGET_RHOS = [0.25, 0.50, 0.75, 0.85, 0.90]
+
+# Categorical slots 1-3 of the validated palette; the marker shape is the second encoding.
+WAITING_SERIES = [
+    ("waiting_time_total", "Total", "#2a78d6", "o"),
+    ("waiting_time_hp", "Original CM", "#eb6834", "s"),
+    ("waiting_time_lp", "All PM", "#1baf7a", "^"),
+]
+ESCALATION_SERIES = ("escalation_rate", "Escalation rate", "#2a78d6", "o")
+# Both columns of the ACM template: 7.0 in is the full text width, so the figure needs no scaling.
+# The point sizes are set for that width, where the matplotlib defaults would come out oversized.
+MAIN_FIGURE_SIZE = (7.0, 2.8)
+MAIN_FIGURE_FONT = {"tick": 7, "label": 8, "legend": 7}
+
+# The image carries no title and no footnote: this text belongs in the caption of the paper,
+# see outputs/MANIFEST.md.
+MAIN_FIGURE_CAPTION = (
+    "Left: mean waiting time over the load, split into all tasks, the original CM tasks and all PM "
+    "tasks. Right: share of PM tasks that escalate. Bands: 95 % Student-t intervals over 30 "
+    "replications of 50,000 h."
+)
 
 METRICS = [
     "waiting_time_total",
@@ -206,7 +228,7 @@ def plot_line(
     fig, ax = plt.subplots(figsize=(9, 5.5))
     for column, label in zip(columns, labels, strict=True):
         ax.plot(summary["target_rho"], summary[column], marker="o", linewidth=2, label=label)
-    ax.set_xlabel("Target utilization rho")
+    ax.set_xlabel(r"Target utilization $\rho$")
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_ylim(bottom=0)
@@ -217,7 +239,46 @@ def plot_line(
     plt.close(fig)
 
 
-def write_plots(summary: pd.DataFrame) -> None:
+def band_series(confidence_intervals: pd.DataFrame, metric: str) -> pd.DataFrame:
+    """Mean and 95 % interval of one metric over the load, ordered by target rho."""
+    rows = confidence_intervals[confidence_intervals["metric"] == metric]
+    return rows.sort_values("target_rho")
+
+
+def plot_main_figure(confidence_intervals: pd.DataFrame, target: Path) -> None:
+    """Waiting time and escalation rate over the load, two panels with 95 % bands.
+
+    No title and no footnote inside the image: both belong in the caption of the paper.
+    """
+    fig, (left, right) = plt.subplots(1, 2, figsize=MAIN_FIGURE_SIZE, constrained_layout=True)
+    for metric, label, color, marker in WAITING_SERIES:
+        rows = band_series(confidence_intervals, metric)
+        left.fill_between(rows["target_rho"], rows["ci_lower"], rows["ci_upper"], color=color, alpha=0.25, linewidth=0)
+        left.plot(rows["target_rho"], rows["mean"], color=color, marker=marker, markersize=5, linewidth=1.8, label=label)
+    left.set_ylabel("Mean waiting time Wq [h]", fontsize=MAIN_FIGURE_FONT["label"])
+    left.legend(loc="upper left", frameon=False, fontsize=MAIN_FIGURE_FONT["legend"])
+
+    metric, label, color, marker = ESCALATION_SERIES
+    rows = band_series(confidence_intervals, metric)
+    right.fill_between(rows["target_rho"], rows["ci_lower"], rows["ci_upper"], color=color, alpha=0.25, linewidth=0)
+    right.plot(rows["target_rho"], rows["mean"], color=color, marker=marker, markersize=5, linewidth=1.8, label=label)
+    right.set_ylabel("Escalation rate [-]", fontsize=MAIN_FIGURE_FONT["label"])
+
+    for ax in (left, right):
+        ax.set_xlabel(r"Target utilization $\rho$", fontsize=MAIN_FIGURE_FONT["label"])
+        # The load axis stays linear, so the curvature in rho is not flattened. That puts 0.85 and
+        # 0.90 close together, so their labels are turned to keep every design point readable.
+        ax.set_xticks(TARGET_RHOS, [f"{rho:.2f}" for rho in TARGET_RHOS], rotation=45, ha="right")
+        ax.tick_params(labelsize=MAIN_FIGURE_FONT["tick"])
+        ax.set_ylim(bottom=0)
+        ax.grid(axis="y", color="#e4e3dd", linewidth=0.8)
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.savefig(target, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def write_plots(summary: pd.DataFrame, confidence_intervals: pd.DataFrame) -> None:
+    plot_main_figure(confidence_intervals, PLOTS["waiting_and_escalation"])
     plot_line(
         summary,
         ["Wq", "WaitingTime_HP", "WaitingTime_LP"],
@@ -253,7 +314,7 @@ def write_plots(summary: pd.DataFrame) -> None:
     plot_line(
         summary,
         ["HangarUtilization", "MechanicsUtilization"],
-        ["Hangar", "Mechanics"],
+        ["Hangar", "Engineers"],
         "Observed utilization [-]",
         "Resource Utilization by Target Utilization",
         PLOTS["resource_utilization"],
@@ -347,7 +408,7 @@ def run_analysis() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     raw_results.to_csv(RAW_RESULTS_CSV, index=False)
     summary.to_csv(SUMMARY_CSV, index=False)
     confidence_intervals.to_csv(CONFIDENCE_INTERVALS_CSV, index=False)
-    write_plots(summary)
+    write_plots(summary, confidence_intervals)
     return raw_results, summary, confidence_intervals
 
 
@@ -359,6 +420,8 @@ def main() -> None:
     print()
     print(f"Raw replication rows: {len(raw_results)}")
     print(f"Confidence interval rows: {len(confidence_intervals)}")
+    print()
+    print(f"Caption of {PLOTS['waiting_and_escalation'].name}: {MAIN_FIGURE_CAPTION}")
     print()
     print("Exports")
     print("=" * 72)
