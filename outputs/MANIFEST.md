@@ -38,6 +38,9 @@ Common settings: paper configuration from `config/scenarios/stable.json` (preemp
 | M/G/1 fed by the CM stream alone, columns `rho_mg1_cm_only`, `mg1_cm_only`, `ratio_des_to_mg1_cm_only`; Pollaczek-Khinchine with lambda_CM and the CM service distribution (§3.1), filled for the `Wq CM/HP` and `Lq CM/HP` rows only | same | same | analytical, one value per load |
 | Variant identifiers V1 to V4 of the DES variants, column `des_variant_id`; each adds one mechanism: V1 analytical assumptions (16 engineers, no escalation, no set-up time), V2 + set-up time, V3 + coupling (15 engineers), V4 + escalation (paper configuration) | same | same | same |
 | Figure: ratio DES to M/G/2 preemptive over the load, one line per DES variant, reference line at 1 | `analytical_vs_des/decomposition_ratio.png` | same | rho 0.25 to 0.90; the baseline load is left out, its rates are not on the target-rho grid |
+| Bay utilization including set-up time and set-up hours per replication of each DES variant, columns `des_hangar_utilization` and `des_setup_hours` with 95 % intervals; one value per load and variant, repeated in every KPI row | `analytical_vs_des/analytical_vs_des.csv` | `scripts/analysis/run_analytical_vs_des.py` | same as above |
+
+Note: run with Python 3.12.11. When the set-up columns were added, the previously existing columns of `analytical_vs_des.csv` differed from the previous version only in the last floating-point digit (max. 1.3e-15 relative).
 
 ## Load sensitivity
 

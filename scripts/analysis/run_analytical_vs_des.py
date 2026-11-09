@@ -135,6 +135,8 @@ def main() -> None:
             if setup is not None:
                 scenario = replace(scenario, priority=replace(scenario.priority, preemption_setup_time=setup))
             runs = model.run_replications(scenario)
+            utilization = confidence_interval(field_values(runs, "hangar_utilization"))
+            setup_hours = confidence_interval(field_values(runs, "setup_hours"))
             for kpi, des_field, analytical_field, has_fcfs, cm_only_field in KPIS:
                 mean, lower, upper = confidence_interval(field_values(runs, des_field))
                 fcfs_value = getattr(fcfs, des_field) if has_fcfs else None
@@ -158,6 +160,12 @@ def main() -> None:
                         "mg1_cm_only": cm_only_value,
                         "rho_mg1_cm_only": rho_cm_only if cm_only_field else None,
                         "ratio_des_to_mg1_cm_only": mean / cm_only_value if cm_only_value else None,
+                        "des_hangar_utilization": utilization[0],
+                        "des_hangar_utilization_ci_lower": utilization[1],
+                        "des_hangar_utilization_ci_upper": utilization[2],
+                        "des_setup_hours": setup_hours[0],
+                        "des_setup_hours_ci_lower": setup_hours[1],
+                        "des_setup_hours_ci_upper": setup_hours[2],
                     }
                 )
     table = pd.DataFrame(rows)
